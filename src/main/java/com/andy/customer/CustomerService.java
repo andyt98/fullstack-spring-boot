@@ -24,7 +24,7 @@ public class CustomerService {
     public Customer getCustomer(Integer id) {
         return customerDao.selectCustomerById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "customer with id %d not found".formatted(id)));
+                        "customer with id [%s] not found".formatted(id)));
     }
 
     public void addCustomer(CustomerRegistrationRequest customerRegistrationRequest) {
@@ -36,7 +36,9 @@ public class CustomerService {
         Customer customer = new Customer(
                 customerRegistrationRequest.name(),
                 email,
-                customerRegistrationRequest.age());
+                customerRegistrationRequest.age(),
+                customerRegistrationRequest.gender()
+        );
 
         customerDao.insertCustomer(customer);
     }
@@ -91,6 +93,7 @@ public class CustomerService {
         customerDao.updateCustomer(customer);
     }
 
-
 }
+
+
 
