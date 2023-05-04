@@ -1,16 +1,31 @@
 services:
+
   db:
     container_name: postgres
-    image: postgres
+    image: postgres:14.1
     environment:
       POSTGRES_USER: andy
       POSTGRES_PASSWORD: password
       POSTGRES_DB: customer
+      PGDATA: /var/lib/postgresql/data
     volumes:
       - db:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5332:5432"
     networks:
+      - db
+    restart: unless-stopped
+
+  customer-api:
+    container_name: customer-api
+    image: andyt98/customer-api
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/customer
+    ports:
+      - "8088:8080"
+    networks:
+      - db
+    depends_on:
       - db
     restart: unless-stopped
 
