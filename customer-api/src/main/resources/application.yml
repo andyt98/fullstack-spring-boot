@@ -4,6 +4,10 @@ server:
     include-message: always
     include-stacktrace: never
 
+cors:
+  allowed-origins: "*"
+  allowed-methods: "*"
+
 spring:
   main:
     web-application-type: servlet
