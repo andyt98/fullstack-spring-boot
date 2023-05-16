@@ -1,14 +1,13 @@
 package com.andy.customer;
 
-
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
 
 @Entity
 @Table(
@@ -33,14 +32,17 @@ public class Customer implements UserDetails {
             generator = "customer_id_seq"
     )
     private Integer id;
-
-    @Column(nullable = false)
+    @Column(
+            nullable = false
+    )
     private String name;
-
-    @Column(nullable = false)
+    @Column(
+            nullable = false
+    )
     private String email;
-
-    @Column(nullable = false)
+    @Column(
+            nullable = false
+    )
     private Integer age;
 
     @Column(
@@ -49,23 +51,37 @@ public class Customer implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(nullable = false)
+    @Column(
+            nullable = false
+    )
     private String password;
+
 
     public Customer() {
     }
 
-    public Customer(String name, String email, String password, Gender gender, Integer age) {
+    public Customer(Integer id,
+                    String name,
+                    String email,
+                    String password,
+                    Integer age,
+                    Gender gender) {
+        this.id = id;
         this.name = name;
         this.email = email;
+        this.password = password;
         this.age = age;
         this.gender = gender;
     }
 
-    public Customer(Integer id, String name, String email, String password, Integer age, Gender gender) {
-        this.id = id;
+    public Customer(String name,
+                    String email,
+                    String password,
+                    Integer age,
+                    Gender gender) {
         this.name = name;
         this.email = email;
+        this.password = password;
         this.age = age;
         this.gender = gender;
     }
@@ -110,28 +126,6 @@ public class Customer implements UserDetails {
         this.gender = gender;
     }
 
-    @Override
-    public String toString() {
-        return "Customer{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", age=" + age +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Customer customer = (Customer) o;
-        return id.equals(customer.id) && name.equals(customer.name) && email.equals(customer.email) && age.equals(customer.age) && gender == customer.gender;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, email, age, gender);
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -145,7 +139,7 @@ public class Customer implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return email;
     }
 
     @Override
@@ -166,5 +160,30 @@ public class Customer implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Customer customer = (Customer) o;
+        return Objects.equals(id, customer.id) && Objects.equals(name, customer.name) && Objects.equals(email, customer.email) && Objects.equals(age, customer.age) && gender == customer.gender && Objects.equals(password, customer.password);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, email, age, gender, password);
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", age=" + age +
+                ", gender=" + gender +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

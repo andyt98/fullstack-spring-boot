@@ -8,37 +8,36 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-
-// use this annotation to not have to open and close mocks
 @ExtendWith(MockitoExtension.class)
 class CustomerServiceTest {
 
     @Mock
     private CustomerDao customerDao;
+    @Mock
+    private PasswordEncoder passwordEncoder;
     private CustomerService underTest;
-
+    private final CustomerDTOMapper customerDTOMapper = new CustomerDTOMapper();
 
     @BeforeEach
     void setUp() {
-        underTest = new CustomerService(customerDao);
+        underTest = new CustomerService(customerDao, customerDTOMapper, passwordEncoder);
     }
-
 
     @Test
     void getAllCustomers() {
-        //When
+        // When
         underTest.getAllCustomers();
 
-        //Then
+        // Then
         verify(customerDao).selectAllCustomers();
     }
 
@@ -46,35 +45,28 @@ class CustomerServiceTest {
     void canGetCustomer() {
         // Given
         int id = 10;
-        Customer customer = new Customer(
-                id,
-                "Alex",
-                "alex@gmail.com",
-                "password", 19,
-                Gender.MALE
-        );
+        Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
+        CustomerDTO expected = customerDTOMapper.apply(customer);
 
-        //When
-        Customer actual = underTest.getCustomer(id);
+        // When
+        CustomerDTO actual = underTest.getCustomer(id);
 
-
-        //Then
-        assertThat(actual).isEqualTo(customer);
+        // Then
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     void willThrowWhenGetCustomerReturnEmptyOptional() {
         // Given
         int id = 10;
+
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.empty());
 
-        //When
-        //Then
-        assertThatThrownBy(() -> underTest.getCustomer(id))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("customer with id [%s] not found".formatted(id));
+        // When
+        // Then
+        assertThatThrownBy(() -> underTest.getCustomer(id)).isInstanceOf(ResourceNotFoundException.class).hasMessage("customer with id [%s] not found".formatted(id));
     }
 
     @Test
@@ -82,49 +74,45 @@ class CustomerServiceTest {
         // Given
         String email = "alex@gmail.com";
 
-        //assume that the email is not in the database
         when(customerDao.existsCustomerWithEmail(email)).thenReturn(false);
 
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(
-                "Alex", email, 19, Gender.MALE
-        );
-        //When
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest("Alex", email, "password", 19, Gender.MALE);
+
+        String passwordHash = "¢5554ml;f;lsd";
+
+        when(passwordEncoder.encode(request.password())).thenReturn(passwordHash);
+
+        // When
         underTest.addCustomer(request);
 
-        //Then
+        // Then
         ArgumentCaptor<Customer> customerArgumentCaptor = ArgumentCaptor.forClass(Customer.class);
 
         verify(customerDao).insertCustomer(customerArgumentCaptor.capture());
 
-        Customer caputuredCustomer = customerArgumentCaptor.getValue();
+        Customer capturedCustomer = customerArgumentCaptor.getValue();
 
-        assertThat(caputuredCustomer.getId()).isNull();
-        assertThat(caputuredCustomer.getName()).isEqualTo(request.name());
-        assertThat(caputuredCustomer.getEmail()).isEqualTo(request.email());
-        assertThat(caputuredCustomer.getName()).isEqualTo(request.name());
-        assertThat(caputuredCustomer.getGender()).isEqualTo(request.gender());
+        assertThat(capturedCustomer.getId()).isNull();
+        assertThat(capturedCustomer.getName()).isEqualTo(request.name());
+        assertThat(capturedCustomer.getEmail()).isEqualTo(request.email());
+        assertThat(capturedCustomer.getAge()).isEqualTo(request.age());
+        assertThat(capturedCustomer.getPassword()).isEqualTo(passwordHash);
     }
 
     @Test
-    void willThrowWhenEmailExistsWhenAddingCustomer() {
+    void willThrowWhenEmailExistsWhileAddingACustomer() {
         // Given
         String email = "alex@gmail.com";
 
-        //assume that the email is in the database
         when(customerDao.existsCustomerWithEmail(email)).thenReturn(true);
 
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(
-                "Alex", email, 19, Gender.MALE
-        );
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest("Alex", email, "password", 19, Gender.MALE);
 
-        //When
-        assertThatThrownBy(() -> underTest.addCustomer(request))
-                .isInstanceOf(DuplicateResourceException.class)
-                .hasMessage("Email already taken");
+        // When
+        assertThatThrownBy(() -> underTest.addCustomer(request)).isInstanceOf(DuplicateResourceException.class).hasMessage("email already taken");
 
-        //Then
+        // Then
         verify(customerDao, never()).insertCustomer(any());
-
     }
 
     @Test
@@ -134,10 +122,9 @@ class CustomerServiceTest {
 
         when(customerDao.existsCustomerById(id)).thenReturn(true);
 
-        //When
+        // When
         underTest.deleteCustomerById(id);
-
-        //Then
+        // Then
         verify(customerDao).deleteCustomerById(id);
     }
 
@@ -148,12 +135,10 @@ class CustomerServiceTest {
 
         when(customerDao.existsCustomerById(id)).thenReturn(false);
 
-        //When
-        assertThatThrownBy(() -> underTest.deleteCustomerById(id))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("customer with id [%s] not found".formatted(id));
+        // When
+        assertThatThrownBy(() -> underTest.deleteCustomerById(id)).isInstanceOf(ResourceNotFoundException.class).hasMessage("customer with id [%s] not found".formatted(id));
 
-        //Then
+        // Then
         verify(customerDao, never()).deleteCustomerById(id);
     }
 
@@ -164,7 +149,7 @@ class CustomerServiceTest {
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
-        String newEmail = "alexandro@gmail.com";
+        String newEmail = "alexandro@amigoscode.com";
 
         CustomerUpdateRequest updateRequest = new CustomerUpdateRequest("Alexandro", newEmail, 23);
 
@@ -189,7 +174,6 @@ class CustomerServiceTest {
         // Given
         int id = 10;
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
-
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
         CustomerUpdateRequest updateRequest = new CustomerUpdateRequest("Alexandro", null, null);
@@ -213,10 +197,9 @@ class CustomerServiceTest {
         // Given
         int id = 10;
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
-
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
-        String newEmail = "alexandro@gmail.com";
+        String newEmail = "alexandro@amigoscode.com";
 
         CustomerUpdateRequest updateRequest = new CustomerUpdateRequest(null, newEmail, null);
 
@@ -241,7 +224,6 @@ class CustomerServiceTest {
         // Given
         int id = 10;
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
-
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
         CustomerUpdateRequest updateRequest = new CustomerUpdateRequest(null, null, 22);
@@ -265,7 +247,6 @@ class CustomerServiceTest {
         // Given
         int id = 10;
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
-
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
         String newEmail = "alexandro@amigoscode.com";
@@ -275,9 +256,7 @@ class CustomerServiceTest {
         when(customerDao.existsCustomerWithEmail(newEmail)).thenReturn(true);
 
         // When
-        assertThatThrownBy(() -> underTest.updateCustomer(id, updateRequest)).
-                isInstanceOf(DuplicateResourceException.class).
-                hasMessage("email already taken");
+        assertThatThrownBy(() -> underTest.updateCustomer(id, updateRequest)).isInstanceOf(DuplicateResourceException.class).hasMessage("email already taken");
 
         // Then
         verify(customerDao, never()).updateCustomer(any());
@@ -288,7 +267,6 @@ class CustomerServiceTest {
         // Given
         int id = 10;
         Customer customer = new Customer(id, "Alex", "alex@gmail.com", "password", 19, Gender.MALE);
-
         when(customerDao.selectCustomerById(id)).thenReturn(Optional.of(customer));
 
         CustomerUpdateRequest updateRequest = new CustomerUpdateRequest(customer.getName(), customer.getEmail(), customer.getAge());
