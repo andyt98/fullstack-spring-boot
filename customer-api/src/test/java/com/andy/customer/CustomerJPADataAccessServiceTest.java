@@ -1,6 +1,5 @@
 package com.andy.customer;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 
 class CustomerJPADataAccessServiceTest {
@@ -61,7 +59,7 @@ class CustomerJPADataAccessServiceTest {
                 1,
                 "Ali",
                 "ali@gmail.com",
-                21,
+                "password", 21,
                 Gender.MALE
         );
 
@@ -115,7 +113,7 @@ class CustomerJPADataAccessServiceTest {
                 1,
                 "Ali",
                 "ali@gmail.com",
-                21,
+                "password", 21,
                 Gender.MALE
         );
 

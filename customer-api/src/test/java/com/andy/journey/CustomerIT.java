@@ -66,7 +66,7 @@ public class CustomerIT {
 
         // make sure that customer is present
         Customer expectedCustomer = new Customer(
-                name, email, age, gender
+                name, email, "password", gender, age
         );
 
         Assertions.assertThat(allCustomers)
@@ -224,7 +224,7 @@ public class CustomerIT {
 
 
         Customer expected = new Customer(
-                id, newName, email, age, gender
+                id, newName, email, "password", age, gender
         );
 
         Assertions.assertThat(updatedCustomer).isEqualTo(expected);
