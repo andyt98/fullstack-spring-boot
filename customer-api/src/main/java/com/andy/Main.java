@@ -9,8 +9,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
 import java.util.Random;
 
 @SpringBootApplication
@@ -21,13 +21,17 @@ public class Main {
     }
 
     @Bean
-    CommandLineRunner runner(CustomerRepository customerRepository) {
+    CommandLineRunner runner(
+            CustomerRepository customerRepository,
+            PasswordEncoder passwordEncoder
+            ) {
         return args -> {
-            createRandomCustomer(customerRepository);
+            createRandomCustomer(customerRepository, passwordEncoder);
         };
     }
 
-    private static void createRandomCustomer(CustomerRepository customerRepository) {
+
+    private static void createRandomCustomer(CustomerRepository customerRepository, PasswordEncoder passwordEncoder) {
         var faker = new Faker();
         Random random = new Random();
         Name name = faker.name();
@@ -39,10 +43,10 @@ public class Main {
         Customer customer = new Customer(
                 firstName +  " " + lastName,
                 email,
+                passwordEncoder.encode("password"),
                 age,
                 gender);
         customerRepository.save(customer);
+        System.out.println(email);
     }
-
-
 }
