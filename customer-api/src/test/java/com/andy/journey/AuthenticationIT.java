@@ -40,7 +40,7 @@ public class AuthenticationIT {
     @Test
     void canLogin() {
         // Given
-// create registration customerRegistrationRequest
+        // create registration customerRegistrationRequest
         Faker faker = new Faker();
         Name fakerName = faker.name();
 

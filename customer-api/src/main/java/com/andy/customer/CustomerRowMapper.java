@@ -19,6 +19,5 @@ public class CustomerRowMapper implements RowMapper<Customer> {
                 Gender.valueOf(rs.getString("gender"))
         );
 
-
     }
 }
