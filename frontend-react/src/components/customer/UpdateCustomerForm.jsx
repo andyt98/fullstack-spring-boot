@@ -1,14 +1,13 @@
 import {Form, Formik, useField} from 'formik';
 import * as Yup from 'yup';
-import {Alert, AlertIcon, Box, Button, FormLabel, Input, Stack} from "@chakra-ui/react";
-import {errorNotification, successNotification} from "../../services/notification.js";
-import {updateCustomer} from "../../services/client.js";
-
+import {Alert, AlertIcon, Box, Button, FormLabel, Input, Select, Stack} from "@chakra-ui/react";
+import {saveCustomer, updateCustomer} from "../../services/client.js";
+import {successNotification, errorNotification} from "../../services/notification.js";
 
 const MyTextInput = ({label, ...props}) => {
     // useField() returns [formik.getFieldProps(), formik.getFieldMeta()]
     // which we can spread on <input>. We can use field meta to show an error
-    // message if the field is invalid, and it has been touched (i.e. visited)
+    // message if the field is invalid and it has been touched (i.e. visited)
     const [field, meta] = useField(props);
     return (
         <Box>
@@ -24,9 +23,8 @@ const MyTextInput = ({label, ...props}) => {
     );
 };
 
-
 // And now we can use these
-const UpdateCustomerForm = ({fetchCustomers, initialValues, customerId}) => {
+const UpdateCustomerForm = ({ fetchCustomers, initialValues, customerId }) => {
     return (
         <>
             <Formik
@@ -54,13 +52,13 @@ const UpdateCustomerForm = ({fetchCustomers, initialValues, customerId}) => {
                             )
                             fetchCustomers();
                         }).catch(err => {
-                        console.log(err);
-                        errorNotification(
-                            err.code,
-                            err.response.data.message
-                        )
+                            console.log(err);
+                            errorNotification(
+                                err.code,
+                                err.response.data.message
+                            )
                     }).finally(() => {
-                        setSubmitting(false);
+                         setSubmitting(false);
                     })
                 }}
             >
@@ -88,7 +86,7 @@ const UpdateCustomerForm = ({fetchCustomers, initialValues, customerId}) => {
                                 placeholder="20"
                             />
 
-                            <Button isDisabled={!(isValid && dirty) || isSubmitting} type="submit">Submit</Button>
+                            <Button disabled={!(isValid && dirty) || isSubmitting} type="submit">Submit</Button>
                         </Stack>
                     </Form>
                 )}
